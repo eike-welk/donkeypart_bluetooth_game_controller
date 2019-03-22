@@ -109,6 +109,9 @@ class BluetoothGameController(BluetoothDevice):
             event = next(self.device.read_loop())
             btn = self.btn_map.get(event.code)
             val = event.value
+            if btn == None and self.verbose:
+                print('Unknown event: {}, value: {}'
+                        .format(event.code, event.value))
             if event.type == ecodes.EV_ABS:
                 val = val / float(self.joystick_max_value)
             return btn, val

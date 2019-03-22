@@ -16,6 +16,7 @@ button_map:
   318: 'RIGHT_STICK_PRESS'
   314: 'SELECT'
   315: 'START'
+  316: 'HOME'
   0: 'LEFT_STICK_X'
   1: 'LEFT_STICK_Y'
   3: 'RIGHT_STICK_X'
@@ -23,6 +24,7 @@ button_map:
   547: 'PAD_RIGHT'
   546: 'PAD_LEFT'
   544: 'PAD_UP'
+  545: 'PAD_DOWN'
   548: 'PAD_DOWN'
 
 
