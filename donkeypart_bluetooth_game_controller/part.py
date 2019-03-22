@@ -20,7 +20,7 @@ class BluetoothDevice:
         all_devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
         likely_devices = []
         for device in all_devices:
-            if search_term in device.name.lower():
+            if search_term.lower() in device.name.lower():
                 likely_devices.append(device)
 
         if len(likely_devices) == 1:
