@@ -49,8 +49,6 @@ class BluetoothGameController(BluetoothDevice):
     """
 
     def __init__(self, event_input_device=None, config_path=None, device_search_term=None, verbose=False):
-
-
         self.verbose = verbose
         self.running = False
 
@@ -63,10 +61,11 @@ class BluetoothGameController(BluetoothDevice):
         self.y_axis_direction = -1  # pushing stick forward gives negative values
 
         self.drive_mode_toggle = cycle(['user', 'local_angle', 'local'])
-        self.drive_mode = next(self.drive_mode_toggle)
+        self.drive_mode_autonomous_toggle = cycle(['local_angle', 'local'])
+        self.drive_mode = next(self.drive_mode_toggle) # 'user'
 
         self.recording_toggle = cycle([True, False])
-        self.recording = next(self.recording_toggle)
+        self.recording = next(self.recording_toggle) # True
 
         if config_path is None:
             config_path = self._get_default_config_path()
@@ -84,11 +83,21 @@ class BluetoothGameController(BluetoothDevice):
         else:
             self.device = event_input_device
 
+#        self.func_map = {
+#            'RIGHT_STICK_X': self.update_angle,
+#            'LEFT_STICK_Y': self.update_throttle,
+#            'B': self.toggle_recording,
+#            'A': self.toggle_drive_mode,
+#            'PAD_UP': self.increment_throttle_scale,
+#            'PAD_DOWN': self.decrement_throttle_scale,
+#        }
         self.func_map = {
-            'LEFT_STICK_X': self.update_angle,
+            'RIGHT_STICK_X': self.update_angle,
             'LEFT_STICK_Y': self.update_throttle,
-            'B': self.toggle_recording,
-            'A': self.toggle_drive_mode,
+            'X': self.start_recording,
+            'Y': self.stop_recording,
+            'B': self.set_drive_mode_manual,
+            'A': self.toggle_drive_mode_autonomous,
             'PAD_UP': self.increment_throttle_scale,
             'PAD_DOWN': self.decrement_throttle_scale,
         }
@@ -198,10 +207,26 @@ class BluetoothGameController(BluetoothDevice):
             self.recording = next(self.recording_toggle)
         return
 
+    def start_recording(self, val):
+        if val == 1:
+            self.recording = True
+
+    def stop_recording(self, val):
+        if val == 1:
+            self.recording = False
+
     def toggle_drive_mode(self, val):
         if val == 1:
             self.drive_mode = next(self.drive_mode_toggle)
         return
+
+    def set_drive_mode_manual(self, val):
+        if val == 1:
+            self.drive_mode = 'user'
+
+    def toggle_drive_mode_autonomous(self, val):
+        if val == 1:
+            self.drive_mode = next(self.drive_mode_autonomous_toggle)
 
     def increment_throttle_scale(self, val):
         if val == 1:

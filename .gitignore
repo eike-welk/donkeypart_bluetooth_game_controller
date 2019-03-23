@@ -1,3 +1,11 @@
+# Pytest
 .pytest_cache
+
+# Python infrastructure
 __pycache__
 *.egg-info
+
+# Vim
+*.swp
+*.swo
+
