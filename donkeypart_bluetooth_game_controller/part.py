@@ -271,6 +271,10 @@ class BluetoothGameController(BluetoothDevice):
 
     def toggle_drive_mode_autonomous(self, val):
         if val == 1:
+            if self.drive_mode == 'user':
+                # Let automatic driving always start with 'local_angle'
+                self.drive_mode_autonomous_toggle = cycle(['local_angle',
+                                                           'local'])
             self.drive_mode = next(self.drive_mode_autonomous_toggle)
 
     def increment_angle_scale(self, val):
