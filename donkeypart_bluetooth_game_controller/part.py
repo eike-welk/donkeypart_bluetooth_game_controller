@@ -2,6 +2,7 @@
 import os
 import time
 from itertools import cycle
+from math import sqrt
 import argparse
 import evdev
 from evdev import ecodes
@@ -56,6 +57,12 @@ class BluetoothGameController(BluetoothDevice):
         self.angle = 0.0
         self.throttle = 0.0
 
+        # For mapping the stick's circular region to a square.
+        self.u = 0
+        self.v = 0
+
+        self.angle_scale = 1.0
+        self.angle_scale_increment = .05
         self.throttle_scale = 1.0
         self.throttle_scale_increment = .05
         self.y_axis_direction = -1  # pushing stick forward gives negative values
@@ -91,13 +98,16 @@ class BluetoothGameController(BluetoothDevice):
 #            'PAD_UP': self.increment_throttle_scale,
 #            'PAD_DOWN': self.decrement_throttle_scale,
 #        }
+
         self.func_map = {
-            'RIGHT_STICK_X': self.update_angle,
-            'LEFT_STICK_Y': self.update_throttle,
+            'LEFT_STICK_X': self.update_stick_x_map,
+            'LEFT_STICK_Y': self.update_stick_y_map,
             'X': self.start_recording,
             'Y': self.stop_recording,
             'B': self.set_drive_mode_manual,
             'A': self.toggle_drive_mode_autonomous,
+            'PAD_RIGHT': self.increment_angle_scale,
+            'PAD_LEFT': self.decrement_angle_scale,
             'PAD_UP': self.increment_throttle_scale,
             'PAD_DOWN': self.decrement_throttle_scale,
         }
@@ -193,9 +203,44 @@ class BluetoothGameController(BluetoothDevice):
         print('Events per second. MAX: {}, AVERAGE: {}'.format(max, average))
 
 
+    def circ_to_square(self, u, v):
+        """Map a circular region to a square region."""
+        def max0(x):
+            return max(x, 0)
+
+        sqrt2 = sqrt(2)
+        x = 0.5 * ( sqrt(max0(2 + 2 * u * sqrt2 + u*u - v*v ))
+                  - sqrt(max0(2 - 2 * u * sqrt2 + u*u - v*v )))
+        y = 0.5 * ( sqrt(max0(2 + 2 * v * sqrt2 - u*u + v*v ))
+                  - sqrt(max0(2 - 2 * v * sqrt2 - u*u + v*v )))
+        return x, y
+
+    def update_stick_x_map(self, val):
+        """
+        React to stick X input event.
+        
+        Map circular region of the stick to the required square region for
+        independent angle and throttle input.
+        """
+        self.u = val
+        x, y = self.circ_to_square(self.u, self.v)
+        self.angle = x * self.angle_scale
+        self.throttle = y * self.throttle_scale * self.y_axis_direction
+
+    def update_stick_y_map(self, val):
+        """
+        React to stick Y input event.
+        
+        Map circular region of the stick to the required square region for
+        independent angle and throttle input.
+        """
+        self.v = val
+        x, y = self.circ_to_square(self.u, self.v)
+        self.angle = x * self.angle_scale
+        self.throttle = y * self.throttle_scale * self.y_axis_direction
 
     def update_angle(self, val):
-        self.angle = val
+        self.angle = val * self.angle_scale
         return
 
     def update_throttle(self, val):
@@ -227,6 +272,16 @@ class BluetoothGameController(BluetoothDevice):
     def toggle_drive_mode_autonomous(self, val):
         if val == 1:
             self.drive_mode = next(self.drive_mode_autonomous_toggle)
+
+    def increment_angle_scale(self, val):
+        if val == 1:
+            self.angle_scale += self.angle_scale_increment
+        return
+
+    def decrement_angle_scale(self, val):
+        if val == 1:
+            self.angle_scale -= self.angle_scale_increment
+        return
 
     def increment_throttle_scale(self, val):
         if val == 1:
