@@ -1,3 +1,8 @@
+# Controller part for the Donkeycar, that controls the car with a Bluetooth
+# game controller. It replaces the Web-Controller.
+# 
+# The part can in principle work with any Bluetooth game controller, however 
+# there is only a configuration file for the "Wii U Pro Controller".
 
 import os
 import time
@@ -9,7 +14,15 @@ from evdev import ecodes
 import yaml
 
 class BluetoothDevice:
-    device = None
+    """
+    Base class for Bluetooth input devices.
+
+    Can search for Bluetooth devices that have a certain name.
+    The matching device is put into `self.device`
+    """
+    def __init__(self, verbose=False):
+        self.device = None
+        self.verbose = verbose
 
     def get_input_device(self, path):
         return evdev.InputDevice(path)
@@ -24,12 +37,23 @@ class BluetoothDevice:
             if search_term.lower() in device.name.lower():
                 likely_devices.append(device)
 
+        if self.verbose:
+            msg = 'Found input devices: \n' \
+                + ', '.join([device.name for device in all_devices]) \
+                + '\n'
+            print(msg)
+
         if len(likely_devices) == 1:
             # correct device was likely found
             return likely_devices[0]
 
         if len(likely_devices) >= 2:
-            raise ValueError("Found multiple device possible devices. Please specify the specific event_input_path.")
+            msg = 'Found multiple input devices with matching names: \n' \
+                + ', '.join([device.name for device in likely_devices]) \
+                + '\n\n' \
+                + 'Please specify a unique name for the desired device.'
+            print(msg)
+            raise ValueError(msg)
 
     def load_device(self, search_term):
         """
@@ -39,18 +63,22 @@ class BluetoothDevice:
         while device is None:
             device = self.find_input_device(search_term)
             if device is None:
-                print("Device matching '{}' couldn't be found. Trying again in 3 seconds.".format(search_term))
+                print("Device matching '{}' couldn't be found. "
+                      "Trying again in 3 seconds."
+                      .format(search_term))
                 time.sleep(3)
         self.device = device
 
 
 class BluetoothGameController(BluetoothDevice):
     """
-    Generator of cordinates of a bouncing moving square for simulations.
+    Controller part for the Donkeycar, that controls the car with a Bluetooth
+    game controller. It replaces the Web-Controller.
     """
 
-    def __init__(self, event_input_device=None, config_path=None, device_search_term=None, verbose=False):
-        self.verbose = verbose
+    def __init__(self, event_input_device=None, config_path=None, 
+                 device_search_term=None, verbose=False):
+        super().__init__(verbose)
         self.running = False
 
         self.state = {}
@@ -204,7 +232,12 @@ class BluetoothGameController(BluetoothDevice):
 
 
     def circ_to_square(self, u, v):
-        """Map a circular region to a square region."""
+        """
+        Map a circular region to a square region.
+
+        The formula is taken from:
+            http://squircular.blogspot.com/2015/09/mapping-circle-to-square.html
+        """
         def max0(x):
             return max(x, 0)
 
@@ -299,19 +332,25 @@ class BluetoothGameController(BluetoothDevice):
 
 
 if __name__ == "__main__":
-    device_search_term = input("""Please give a string that can identify the bluetooth device (ie. nintendo)""")
-    if device_search_term == "":
-        print('No search term given. Using Nintendo.')
-        device_search_term = "Nintendo"
-
-    parser = argparse.ArgumentParser(description='Scripts to help test and setup your controller.')
-    parser.add_argument('command', metavar='command', type=str, help='log or profile')
+    parser = argparse.ArgumentParser(
+                description='Script to help test and setup your Bluetooth controller.')
+    parser.add_argument('command', metavar='command', type=str, 
+                        choices=['log', 'profile'],
+                        help='Possible commands are: "log", "profile"')
+    parser.add_argument('search_term', metavar='search-term', type=str, nargs='?',
+                        default='Nintendo',
+                        help='A string that can identify the Bluetooth device. '
+                             'Default: "Nintendo"')
 
     args = parser.parse_args()
-    print(args.command)
+    #print(args.command)
+    #print(args.search_term)
+
+    device_search_term = args.search_term
     if args.command == 'profile':
         ctl = BluetoothGameController(device_search_term=device_search_term)
         ctl.profile()
     elif args.command == 'log':
         ctl = BluetoothGameController(verbose=True, device_search_term=device_search_term)
         ctl.update()
+
