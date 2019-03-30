@@ -28,7 +28,8 @@ button_map:
   548: 'PAD_DOWN'
 
 
-joystic_max_value: 1100
+#joystick_max_value: 1280 #Slightly too high
+joystick_max_value: 1200 #Better for badly centered sticks.
 
 
 
