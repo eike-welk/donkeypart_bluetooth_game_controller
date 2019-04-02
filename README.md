@@ -2,13 +2,13 @@
 
 # Bluetooth Game Controller
 This is a library to connect a [Wii-U](https://www.amazon.com/gp/product/B01GJBUNTG/ref=as_li_ss_tl?ie=UTF8&psc=1&linkCode=ll1&tag=donkeycar-20&linkId=a7fc2ff3e6489b9e6dd267a7f8b2ff19&language=en_US)
- (and possibly others) bluetooth game controller to your donkeycar.
+ (and possibly others) Bluetooth game controller to your Donkeycar.
  
  >> See the bottom of the page for tested controllers and brands. Beware of knockoffs!
 
 
 
-### Install
+## Install
 Install the library.
 ```bash
 git clone https://github.com/autorope/donkeypart_bluetooth_game_controller.git
@@ -16,7 +16,7 @@ pip install -e ./donkeypart_bluetooth_game_controller
 ```
 
 
-### Connect your bluetooth controller to the raspberry pi.
+## Connect your bluetooth controller to the raspberry pi.
 1. Start the bluetooth bash tool on your raspberry pi.
 ```bash
 sudo bluetoothctl
@@ -50,7 +50,7 @@ X 0
 ```
 
 
-6. Assuming you can see the button outputs, you can now plug this in as your donkeycar controller in
+6. Assuming you can see the button outputs, you can now plug this in as your Donkeycar controller in
 the manage.py script...
 ```python
 from donkeypart_bluetooth_game_controller import BluetoothGameController
@@ -59,7 +59,31 @@ from donkeypart_bluetooth_game_controller import BluetoothGameController
 ctl = BluetoothGameController()
 
 ```
-## Add a new type of bluetooth controller.
+
+
+## Button and stick functionality
+
+* Left stick
+    * Forward / backward: Throttle
+    * Right / left: Steering
+
+* Control pad (cross)
+    * Forward / backward: Throttle scale
+    * Right / left: Steering scale
+
+* X: Start recording
+* Y: Stop recording
+* A: Toggle autonomous driving modes
+* B: Manual driving mode
+
+The circular region of the left stick is mapped to a square region, like on a RC remote controller.  This means for the circle of extreme stick deflections:
+
+* The 45 degree positions are mapped to full throttle, full steering deflection.
+* The arcs from horizontal to 45 degrees are mapped to full steering (and variable throttle).
+* The arcs from forward to 45 degrees are mapped to full throttle (and variable steering).
+
+
+# Add a new type of Bluetooth controller.
 If you don't have a different type of controller these same instructions should work but the button mappings will be different.
 
 1. Use the this same script to show the live output of your controller...
@@ -89,7 +113,7 @@ ctl = BluetoothGameController(config=/path/to/your/config/file)
 
 
 ## Test a New Controller
-Run the profile script to see the number of events per second you recieve from the controller. Then make a pull request 
+Run the profile script to see the number of events per second you receive from the controller. Then make a pull request 
 to update this document to help others.
 ```
 python ./donkeypart_bluetooth_game_controller/donkeyblue/part.py log
